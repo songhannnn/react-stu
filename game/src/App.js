@@ -6,19 +6,22 @@ function Square({ value, onSquareClick }) {
 
 export default function Game() {
   // 记录点击次数
-  const [countVal, setCountVal] = useState(1);
+  const [countVal, setCountVal] = useState(0);
   // 记录历史状态
   const [history, setHistory] = useState([Array(9).fill(null)]);
 
-  const currentSquare = history[history.length - 1];
+  const currentSquare = history[countVal];
 
   function handlePlay(num, arr) {
-    setHistory([...history, arr])
+    // 设置棋子记录 - 时间跳转时,只保存跳转之前的数据
+    setHistory([...history.slice(0, countVal + 1), arr])
+    // 设置步数
     setCountVal(num);
   }
 
-  function jumpTo() {
-
+  function jumpTo(index) {
+    // 回到之前,考虑接下来的棋子
+    setCountVal(index)
   }
 
   const moves = history.map((square, move) => {
@@ -30,7 +33,7 @@ export default function Game() {
       des = 'Game start'
     }
     return (
-      <li>
+      <li key={move}>
         <button onClick={() => jumpTo(move)}>{des}</button>
       </li>
     )
@@ -38,11 +41,19 @@ export default function Game() {
 
   return (
     <div className="game">
+
       <div className="game-board">
         <Board count={countVal} squares={currentSquare} onPlay={handlePlay} />
       </div>
       <div className="game-info">
+        当前步数--{countVal}
         <ol>{moves}</ol>
+      </div>
+      <div className="game-info">
+        历史记录
+        <ul>
+          <li className='history-li'>{JSON.stringify(history)}</li>
+        </ul>
       </div>
     </div>
   )
@@ -56,19 +67,21 @@ function Board({ count, squares, onPlay }) {
     status = 'Winner is ' + winner;
   }
   else {
-    status = 'Next player: ' + (count % 2 == 0 ? 'O' : 'X');
+    status = 'Next player: ' + (count % 2 == 0 ? 'X' : 'O');
   }
 
   function handleClik(i) {
-    if (squares[i] || calculateWinner(squares)) return
+    if (squares[i] || calculateWinner(squares)) {
+      return;
+    }
 
     const nextSquare = squares.map(e => e);
 
     if (count % 2 == 0) {
-      nextSquare[i] = 'O';
+      nextSquare[i] = 'X';
     }
     else {
-      nextSquare[i] = 'X'
+      nextSquare[i] = 'O'
     }
     let c = count + 1;
     onPlay(c, nextSquare);
